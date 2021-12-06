@@ -16,59 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Main
 {
-    public static class FPthreads implements Runnable
-    {
-        BufferedImage image;
-        int width;
-        int height;
-        double[] range_re;
-        double[] range_im;
-        int max_itr;
-        int thread_number;
-        int thread_id;
-        FPthreads(BufferedImage im, int wd, int hg,double[] rng_re,double[] rng_im, int max_iterations, int thrd_num, int thrd_id)
-        {
-            image=im;
-            width=wd;
-            height=hg;
-            range_re=rng_re;
-            range_im=rng_im;
-            max_itr=max_iterations;
-            thread_number=thrd_num;
-            thread_id=thrd_id;
-        }
-        FPthreads(BufferedImage im, int wd, int hg, int thrd_num, int thrd_id)
-        {
-            image=im;
-            width=wd;
-            height=hg;
-            range_re=new double[] {-2.1,0.6};
-            range_im=new double[]  {-1.2,1.2};
-            max_itr=200;
-            thread_number=thrd_num;
-            thread_id=thrd_id;
-        }
 
-        @Override
-        public void run()
-        {
-//            System.out.println("Thread started:"+Thread.currentThread().getId());
-            for(int xx=thread_id*width/thread_number;xx<(thread_id+1)*width/thread_number; xx++)
-            {
-                for(int yy=0;yy<height; yy++)
-                {
-                    double aa=range_re[0]+xx*(range_re[1]-range_re[0])/(width-1);
-                    double bb=range_im[0]+yy*(range_im[1]-range_im[0])/(height-1);
-                    if(check_condition(aa,bb,max_itr))
-                        image.setRGB(xx, yy, Color.BLACK.getRGB());
-                    else
-                        image.setRGB(xx, yy, Color.WHITE.getRGB());
-
-                }
-            }
-//            System.out.println("Thread ended:"+Thread.currentThread().getId());
-        }
-    }
     public static class FPpools implements Runnable
     {
         BufferedImage image;
@@ -205,7 +153,7 @@ public class Main
             avg_time+=value;
         }
         avg_time/=nn;
-        save_picture(pixels,"sequence");
+//        save_picture(pixels,"sequence");
 
         return avg_time*Math.pow(10,-9);
     }
@@ -225,7 +173,7 @@ public class Main
             for( int thread_id=0; thread_id<cores;thread_id++)
             {
                 threads_list[thread_id]=
-                        new Thread(new FPthreads(pixels, width, height, cores,thread_id));
+                        new Thread(new FPpools(pixels, width, height,width/cores,height,thread_id,0));
             }
             for(var thread:threads_list)
             {
@@ -294,7 +242,7 @@ public class Main
             avg_time+=value;
         }
         avg_time/=nn;
-        save_picture(pixels,"pools");
+//        save_picture(pixels,"pools");
 
         return avg_time*Math.pow(10,-9);
     }
@@ -329,16 +277,16 @@ public class Main
     {
 	// write your code here
 //        System.out.println("hello");
-        int[] dimensions=new int[] { 32, 64, 128, 256, 512, 1024, 2048};
+//        int[] dimensions=new int[] { 32, 64, 128, 256, 512, 1024, 2048};
 //        int[] dimensions=new int[] { 32, 64, 128, 256, 512, 1024, 2048, 4096 ,8192};
-//        int[] dimensions=new int[] { 32, 64, 128};
+        int[] dimensions=new int[] { 32, 64, 128};
         double[] time= new double[dimensions.length];
-        int width=1920;
-        int height=1920;
+//        int width=1920;
+//        int height=1920;
         int[] window_size=new int[] {4,8,16, 32, 64, 128};
         for(int ii=0;ii<dimensions.length;ii++)
         {
-            time[ii]=measure_time(dimensions[ii],dimensions[ii],200);
+            time[ii]=measure_time(dimensions[ii],dimensions[ii],100);
             System.out.println(time[ii]);
         }
         write_output("out.txt",dimensions,time);
@@ -346,14 +294,14 @@ public class Main
 
         for(int ii=0;ii<dimensions.length;ii++)
         {
-            time[ii]=measure_time_threads(dimensions[ii],dimensions[ii],200);
+            time[ii]=measure_time_threads(dimensions[ii],dimensions[ii],100);
             System.out.println(time[ii]);
         }
         write_output("out_threads.txt",dimensions,time);
         System.out.println(time.toString());
         for(int ii=0;ii<dimensions.length;ii++)
         {
-            time[ii]=measure_time_pools(dimensions[ii],dimensions[ii],200,2,2);
+            time[ii]=measure_time_pools(dimensions[ii],dimensions[ii],10,2,2);
             System.out.println(time[ii]);
 
         }
@@ -363,7 +311,7 @@ public class Main
         {
             for(int ii=0;ii<dimensions.length;ii++)
             {
-                time[ii]=measure_time_pools(dimensions[ii],dimensions[ii],200,dimensions[ii]/size,dimensions[ii]/size);
+                time[ii]=measure_time_pools(dimensions[ii],dimensions[ii],100,dimensions[ii]/size,dimensions[ii]/size);
                 System.out.println(time[ii]);
                 write_output("out_pools"+size+".txt",dimensions,time);
             }
